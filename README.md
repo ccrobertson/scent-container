@@ -31,6 +31,22 @@ module load singularity   # or apptainer, depending on your cluster
 singularity pull scent.sif docker://ghcr.io/ccrobertson/scent-container:latest
 ```
 
+**Always run with `--no-home`.** Singularity mounts your host `$HOME` by
+default, and if you have a personal R library there (e.g. from prior
+`module load R/...` work, or an `.Rprofile` that customizes `.libPaths()`),
+R will find and load *those* host packages ahead of the container's own --
+concretely, this breaks `library(Seurat)` if your host has an older
+`ggplot2` than Seurat's container version requires. `--no-home` prevents
+the host library from ever shadowing the container's:
+
+```bash
+singularity exec --no-home scent.sif Rscript -e 'library(SCENT); library(Seurat)'
+```
+
+Paths outside `$HOME` (e.g. `/nfs/turbo/...`) are unaffected and still
+reachable with `--no-home`, as long as your cluster's Singularity config
+auto-binds them (Great Lakes does for `/nfs`).
+
 ## Scripts
 
 - `scripts/build_gene_bed.R` -- generates the hg38 gene-body ±500kb BED file
@@ -41,7 +57,7 @@ singularity pull scent.sif docker://ghcr.io/ccrobertson/scent-container:latest
   `CreateSCENTObj()`/`CreatePeakToGeneList()`. Run it with:
 
   ```bash
-  singularity exec scent.sif Rscript /opt/scent/scripts/prepare_scent_inputs.R \
+  singularity exec --no-home scent.sif Rscript /opt/scent/scripts/prepare_scent_inputs.R \
     --rna_rds path/to/rna.rds \
     --atac_rds path/to/atac.rds \
     --meta_csv path/to/metadata.csv \
