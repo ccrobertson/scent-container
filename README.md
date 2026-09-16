@@ -18,7 +18,7 @@ Built on `bioconductor/bioconductor_docker` with:
 ## Build
 
 Images are built and pushed automatically to
-[ghcr.io/ccrobertson/scent](https://github.com/ccrobertson/scent-container/pkgs/container/scent)
+[ghcr.io/ccrobertson/scent-container](https://github.com/ccrobertson/scent-container/pkgs/container/scent-container)
 by GitHub Actions (`.github/workflows/build.yml`) on every push to `main`
 that touches `Dockerfile` or `scripts/`.
 
@@ -28,7 +28,7 @@ No local build/root needed -- pull the image GitHub Actions already built:
 
 ```bash
 module load singularity   # or apptainer, depending on your cluster
-singularity pull scent.sif docker://ghcr.io/ccrobertson/scent:latest
+singularity pull scent.sif docker://ghcr.io/ccrobertson/scent-container:latest
 ```
 
 ## Scripts
