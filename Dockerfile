@@ -9,6 +9,15 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends bedtools procps \
     && rm -rf /var/lib/apt/lists/*
 
+# The base image ships CRAN packages pinned to whatever was current at the
+# Bioconductor release date (e.g. ggplot2 3.5.1), which can be too old for
+# versioned NAMESPACE imports declared by packages installed later (Seurat
+# requires ggplot2 >= 3.5.2). install.packages() doesn't upgrade an
+# already-installed dependency just because a new package's NAMESPACE
+# requires a newer version -- it installs fine but fails at library() time.
+# Refresh all preinstalled CRAN packages up front to avoid that whack-a-mole.
+RUN Rscript -e 'update.packages(ask = FALSE, checkBuilt = TRUE, repos = BiocManager::repositories())'
+
 # CRAN deps: SCENT's own Imports, plus Seurat/optparse for the ETL wrapper
 # scripts (SCENT itself never touches Seurat directly -- Seurat is only
 # needed here to extract raw count matrices out of Seurat objects upstream
