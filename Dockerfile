@@ -18,6 +18,18 @@ ENV OPENBLAS_NUM_THREADS=1
 ENV MKL_NUM_THREADS=1
 ENV BLAS_NUM_THREADS=1
 
+# The base image's own /usr/local/lib/R/etc/Renviron.site (set up for
+# Bioconductor's build-machine testing, unrelated to us) hardcodes
+# OMP_NUM_THREADS=2 and OMP_THREAD_LIMIT=2. R's Renviron.site processing
+# overwrites the process environment at startup, silently undoing the ENV
+# line above from R's own perspective (confirmed: Sys.getenv("OMP_NUM_THREADS")
+# read "2" even with ENV OMP_NUM_THREADS=1 set) -- so a Docker ENV alone
+# isn't sufficient here. Patch it directly rather than relying on ENV.
+RUN sed -i \
+      -e 's/^OMP_NUM_THREADS=.*/OMP_NUM_THREADS=1/' \
+      -e 's/^OMP_THREAD_LIMIT=.*/OMP_THREAD_LIMIT=1/' \
+      /usr/local/lib/R/etc/Renviron.site
+
 # bedtools is a hard SystemRequirement of SCENT (used by CreatePeakToGeneList
 # to intersect ATAC peaks against gene-body +/-500kb windows).
 RUN apt-get update \

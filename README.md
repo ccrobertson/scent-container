@@ -61,6 +61,16 @@ workload: unpinned, 4-way parallel took the same wall time as serial;
 pinned, it was ~2.8x faster. If you override these env vars for some other
 reason, be aware you may reintroduce this.
 
+Note: `OMP_NUM_THREADS`/`OMP_THREAD_LIMIT` specifically are also patched
+directly in `/usr/local/lib/R/etc/Renviron.site` (not just set via Docker
+`ENV`), because the base `bioconductor_docker` image's own `Renviron.site`
+(for Bioconductor's build-machine testing) hardcodes
+`OMP_NUM_THREADS=2`/`OMP_THREAD_LIMIT=2`, and R's `Renviron.site`
+processing overwrites the process environment at startup -- a Docker `ENV`
+alone is silently undone from R's perspective. `OPENBLAS_NUM_THREADS`/
+`MKL_NUM_THREADS`/`BLAS_NUM_THREADS` aren't touched by that file, so `ENV`
+was already sufficient for those.
+
 ## Scripts
 
 - `scripts/build_gene_bed.R` -- generates the hg38 gene-body ±500kb BED file
