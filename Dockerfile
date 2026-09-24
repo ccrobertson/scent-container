@@ -3,6 +3,21 @@ FROM bioconductor/bioconductor_docker:RELEASE_3_19
 LABEL org.opencontainers.image.description="R/Seurat/SCENT/bedtools container for single-cell enhancer-gene (ATAC x RNA) mapping with the SCENT package"
 LABEL org.opencontainers.image.source="https://github.com/ccrobertson/scent-container"
 
+# SCENT's own bootstrap parallelizes via parallel::mclapply (forking
+# `ncores` processes). Without pinning these, R's BLAS/LAPACK backend can
+# ALSO multithread each glm.fit() internally (e.g. 2 OpenMP threads by
+# default in this image), so N forked processes x M internal threads each
+# oversubscribes the CPUs actually allocated (e.g. 4 forks x 2 threads = 8
+# threads competing for 4 allocated cores) -- this silently cancels out
+# the benefit of the outer-level fork parallelism, making `ncores=4` run no
+# faster than `ncores=1` with no error or warning. Confirmed empirically:
+# unpinned, 4-way parallel bootstrap took the same wall time as serial;
+# pinned to 1 thread each, 4-way parallel was ~2.8x faster than serial.
+ENV OMP_NUM_THREADS=1
+ENV OPENBLAS_NUM_THREADS=1
+ENV MKL_NUM_THREADS=1
+ENV BLAS_NUM_THREADS=1
+
 # bedtools is a hard SystemRequirement of SCENT (used by CreatePeakToGeneList
 # to intersect ATAC peaks against gene-body +/-500kb windows).
 RUN apt-get update \

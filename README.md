@@ -47,6 +47,20 @@ Paths outside `$HOME` (e.g. `/nfs/turbo/...`) are unaffected and still
 reachable with `--no-home`, as long as your cluster's Singularity config
 auto-binds them (Great Lakes does for `/nfs`).
 
+**BLAS/OpenMP threads are pinned to 1** (`OMP_NUM_THREADS`,
+`OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS`, `BLAS_NUM_THREADS`, set as image
+`ENV` vars). This matters if you use SCENT's `ncores` argument (or any
+`parallel::mclapply`/`boot(parallel="multicore")` code) for outer-level
+parallelism: without pinning, each forked process can *also* multithread
+its own linear algebra internally, oversubscribing the CPUs your job
+actually has allocated (e.g. 4 forked processes x 2 internal threads each
+= 8 threads contending for 4 allocated cores) -- this silently cancels out
+the parallel speedup with no error or warning; `ncores=4` ends up no
+faster than `ncores=1`. Confirmed empirically on a SCENT bootstrap
+workload: unpinned, 4-way parallel took the same wall time as serial;
+pinned, it was ~2.8x faster. If you override these env vars for some other
+reason, be aware you may reintroduce this.
+
 ## Scripts
 
 - `scripts/build_gene_bed.R` -- generates the hg38 gene-body ±500kb BED file
