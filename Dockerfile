@@ -52,9 +52,13 @@ RUN Rscript -e 'update.packages(ask = FALSE, checkBuilt = TRUE, repos = BiocMana
 # bootstrap's per-replicate Poisson refit -- same model/statistics as
 # SCENT's own glm()-based assoc_poisson, just a faster QR-based solver, and
 # the design matrix is built once per pair instead of once per replicate.
+# fixest: peak:condition interaction model (fepois) -- a separate,
+# analytic-SE (cluster-robust on donor) alternative to SCENT's own
+# bootstrap framework, used to directly test whether a gene-peak link
+# differs by condition rather than just whether it exists.
 RUN Rscript -e 'BiocManager::install(c( \
       "Seurat", "Matrix", "data.table", "dplyr", "stringr", "Hmisc", \
-      "R.utils", "lme4", "boot", "optparse", "remotes", "fastglm", \
+      "R.utils", "lme4", "boot", "optparse", "remotes", "fastglm", "fixest", \
       "TxDb.Hsapiens.UCSC.hg38.knownGene", "org.Hs.eg.db", \
       "GenomicFeatures", "GenomicRanges", "IRanges", "GenomeInfoDb" \
     ), update = FALSE, ask = FALSE)'
