@@ -48,10 +48,13 @@ RUN Rscript -e 'update.packages(ask = FALSE, checkBuilt = TRUE, repos = BiocMana
 # CRAN deps: SCENT's own Imports, plus Seurat/optparse for the ETL wrapper
 # scripts (SCENT itself never touches Seurat directly -- Seurat is only
 # needed here to extract raw count matrices out of Seurat objects upstream
-# of SCENT's own API).
+# of SCENT's own API). fastglm: used in scent_helpers.R to accelerate the
+# bootstrap's per-replicate Poisson refit -- same model/statistics as
+# SCENT's own glm()-based assoc_poisson, just a faster QR-based solver, and
+# the design matrix is built once per pair instead of once per replicate.
 RUN Rscript -e 'BiocManager::install(c( \
       "Seurat", "Matrix", "data.table", "dplyr", "stringr", "Hmisc", \
-      "R.utils", "lme4", "boot", "optparse", "remotes", \
+      "R.utils", "lme4", "boot", "optparse", "remotes", "fastglm", \
       "TxDb.Hsapiens.UCSC.hg38.knownGene", "org.Hs.eg.db", \
       "GenomicFeatures", "GenomicRanges", "IRanges", "GenomeInfoDb" \
     ), update = FALSE, ask = FALSE)'
